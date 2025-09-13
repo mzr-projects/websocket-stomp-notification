@@ -1,0 +1,27 @@
+Usage
+	•	Start: docker compose up -d
+	•	Management UI: http://localhost:15672 (login with RABBITMQ_USER/RABBITMQ_PASSWORD)
+	•	AMQP: amqp://localhost:5672
+	•	STOMP (TCP): stomp://localhost:61613
+	•	Prometheus: http://localhost:15692/metrics
+
+Verifying STOMP
+	•	Using basic telnet/netcat:
+	a.	Connect: nc localhost 61613
+	b.	Send:
+                CONNECT
+                accept-version:1.2
+                host:/prod
+                login:app-user
+                heart-beat:10000,10000
+                (Press Enter twice; expect CONNECTED frame)
+
+•	With Spring StompBrokerRelay, set relay host to localhost, port 61613, login/pass to your values, and vhost to your RABBITMQ_VHOST.
+
+Production notes
+	•	TLS: Prefer terminating TLS at your edge/proxy. If you must run STOMP TLS on RabbitMQ, mount certs and enable the TLS block in rabbitmq.conf and the 61614 port in compose.
+	•	Secrets: Use Docker secrets or your platform’s secret manager; avoid committing .env
+	•	Persistence: rabbitmq_data is a named volume. Backup regularly.
+	•	Limits: Tune vm_memory_high_watermark and disk_free_limit to match your node resources.
+	•	Monitoring: Expose Prometheus metrics (15692) and integrate with your observability stack.
+	•	Clustering: Set the same RABBITMQ_ERLANG_COOKIE across nodes, add more services, and configure cluster_formation if you expand beyond a single node.
