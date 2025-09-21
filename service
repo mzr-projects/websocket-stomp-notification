@@ -1,0 +1,88 @@
+[Unit]
+Description=My Java Application
+Documentation=https://example.com/docs
+After=network-online.target
+Wants=network-online.target
+Requires=network.target
+
+[Service]
+# Service Type
+Type=exec
+ExecStart=/usr/bin/java \
+    -server \
+    -Xms1g \
+    -Xmx2g \
+    -XX:+UseG1GC \
+    -XX:G1HeapRegionSize=16m \
+    -XX:+UseStringDeduplication \
+    -XX:+OptimizeStringConcat \
+    -XX:+UseCompressedOops \
+    -Djava.security.egd=file:/dev/./urandom \
+    -Djava.awt.headless=true \
+    -Dfile.encoding=UTF-8 \
+    -Duser.timezone=UTC \
+    -Dspring.profiles.active=production \
+    -Dlogging.config=/opt/myapp/config/logback-spring.xml \
+    -jar /opt/myapp/myapp.jar
+
+# Process Management
+ExecReload=/bin/kill -HUP $MAINPID
+ExecStop=/bin/kill -TERM $MAINPID
+KillMode=mixed
+KillSignal=SIGTERM
+TimeoutStartSec=60s
+TimeoutStopSec=30s
+RestartSec=10s
+Restart=on-failure
+RestartPreventExitStatus=255
+
+# User and Group
+User=myapp
+Group=myapp
+UMask=0027
+
+# Working Directory
+WorkingDirectory=/opt/myapp
+Environment=HOME=/opt/myapp
+
+# Security Settings
+NoNewPrivileges=yes
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectHome=yes
+ProtectSystem=strict
+ReadWritePaths=/opt/myapp/logs /opt/myapp/data /tmp
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+RestrictSUIDSGID=yes
+RestrictRealtime=yes
+RestrictNamespaces=yes
+LockPersonality=yes
+MemoryDenyWriteExecute=yes
+
+# Network Security
+PrivateNetwork=no
+IPAddressDeny=any
+IPAddressAllow=localhost
+IPAddressAllow=10.0.0.0/8
+IPAddressAllow=172.16.0.0/12
+IPAddressAllow=192.168.0.0/16
+
+# Resource Limits
+LimitNOFILE=65536
+LimitNPROC=4096
+MemoryMax=3G
+CPUQuota=200%
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=myapp
+
+# Health Check (requires systemd 246+)
+# ExecStartPost=/bin/sleep 30
+# ExecStartPost=/usr/bin/curl -f http://localhost:8080/actuator/health
+
+[Install]
+WantedBy=multi-user.target
